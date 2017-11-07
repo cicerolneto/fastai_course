@@ -11,7 +11,7 @@ from keras.layers.normalization import BatchNormalization
 from keras.utils.data_utils import get_file
 from keras.models import Sequential
 from keras.layers.core import Flatten, Dense, Dropout, Lambda
-from keras.layers.convolutional import Convolution2D, MaxPooling2D, ZeroPadding2D
+from keras.layers.convolutional import Conv2D, MaxPooling2D, ZeroPadding2D
 from keras.layers.pooling import GlobalAveragePooling2D
 from keras.optimizers import SGD, RMSprop, Adam
 from keras.preprocessing import image
@@ -97,7 +97,7 @@ class Vgg16():
         model = self.model
         for i in range(layers):
             model.add(ZeroPadding2D((1, 1)))
-            model.add(Convolution2D(filters, 3, 3, activation='relu'))
+            model.add(Conv2D(filters, 3, 3, activation='relu'))
         model.add(MaxPooling2D((2, 2), strides=(2, 2)))
 
 
@@ -162,9 +162,6 @@ class Vgg16():
         """
         model = self.model
         model.pop()
-        #for idx in range(len(model.layers)-1): #Leave the second to last layer trainable
-        #    model.layers[idx].trainable = False
-        #model.layers[len(model.layers)-1].trainable = True    
         for layer in model.layers: layer.trainable=False
         model.add(Dense(num, activation='softmax'))
         self.compile()
@@ -177,8 +174,10 @@ class Vgg16():
                 batches : A keras.preprocessing.image.ImageDataGenerator object.
                           See definition for get_batches().
         """
-        self.ft(batches.nb_class)
+       
+        self.ft(batches.num_classes)
         classes = list(iter(batches.class_indices)) # get a list of all the class labels
+        #print(classes)
         
         # batches.class_indices is a dict with the class name as key and an index as value
         # eg. {'cats': 0, 'dogs': 1}
@@ -207,13 +206,13 @@ class Vgg16():
                 validation_data=(val, val_labels), batch_size=batch_size)
 
 
-    def fit(self, batches, val_batches, nb_epoch=1):
+    def fit(self, batches, val_batches, nb_epoch=1, batch_size = 64):
         """
             Fits the model on data yielded batch-by-batch by a Python generator.
             See Keras documentation: https://keras.io/models/model/
         """
-        self.model.fit_generator(batches, samples_per_epoch=batches.nb_sample, nb_epoch=nb_epoch,
-                validation_data=val_batches, nb_val_samples=val_batches.nb_sample)
+        self.model.fit_generator(batches, steps_per_epoch=batches.samples/batch_size, epochs=nb_epoch,
+                validation_data=val_batches, validation_steps=val_batches.samples/batch_size)
 
 
     def test(self, path, batch_size=8):
