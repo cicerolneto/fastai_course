@@ -66,6 +66,10 @@ def to_plot(img):
     else:
         return np.rollaxis(img, 0, 3).astype(np.uint8)
 
+def plotgray(img):
+    im = np.rollaxis(img, 0, 1).astype(np.uint8)
+    plt.imshow(im)
+    
 def plot(img):
     plt.imshow(to_plot(img))
 
